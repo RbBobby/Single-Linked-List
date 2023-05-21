@@ -49,6 +49,8 @@ class SingleLinkedList {
         // При ValueType, совпадающем с const Type, играет роль конвертирующего конструктора
         BasicIterator(const BasicIterator<Type>& other) noexcept :node_(other.node_) {}
 
+
+
         // Чтобы компилятор не выдавал предупреждение об отсутствии оператора = при наличии
         // пользовательского конструктора копирования, явно объявим оператор = и
         // попросим компилятор сгенерировать его за нас
@@ -139,21 +141,8 @@ public:
         }
 
     }
-    SingleLinkedList(const SingleLinkedList& other) {
-        SingleLinkedList<Type> copy;
 
-        Iterator p_copy = copy.before_begin();
-        
-        for (auto p : other) {
-             
-            copy.InsertAfter(p_copy, p);
-            ++p_copy;
-        }
-        
-        copy.swap(*this);
-    }
-
-    SingleLinkedList& operator=(const SingleLinkedList& rhs) {
+    void CopyAndSwap(const SingleLinkedList& rhs) {
         SingleLinkedList<Type> copy;
         Iterator p_copy = copy.before_begin();
 
@@ -162,8 +151,17 @@ public:
             copy.InsertAfter(p_copy, p);
             ++p_copy;
         }
-
         copy.swap(*this);
+        
+    }
+
+    SingleLinkedList(const SingleLinkedList& other) {
+        this->CopyAndSwap(other);
+       
+    }
+
+    SingleLinkedList& operator=(const SingleLinkedList& rhs) {
+        this->CopyAndSwap(rhs);
         return *this;
     }
 
@@ -278,9 +276,10 @@ public:
     }
 
     void PopFront() noexcept {
-        assert(head_.next_node);
+        assert(!this->IsEmpty());
         Node new_head = *(this->head_.next_node);
         this->head_ = new_head;
+
         --size_;
     }
 
@@ -289,7 +288,7 @@ public:
      * Возвращает итератор на элемент, следующий за удалённым
      */
     Iterator EraseAfter(ConstIterator pos) noexcept {
-        assert(size_ != 0u);
+        assert(!this->IsEmpty());
         assert(pos != this->cend());
         Node* deleted_elem = pos.node_->next_node;
         pos.node_->next_node = deleted_elem->next_node;
@@ -314,13 +313,16 @@ bool operator==(const SingleLinkedList<Type>& lhs, const SingleLinkedList<Type>&
     size_t size_lhs = lhs.GetSize();
     size_t size_rhs = rhs.GetSize();
     if (size_lhs == size_rhs) {
+
         return std::equal(lhs.begin(), lhs.end(), rhs.begin());
+
     }
     return false;
 }
 
 template <typename Type>
 bool operator!=(const SingleLinkedList<Type>& lhs, const SingleLinkedList<Type>& rhs) {
+
     return !(lhs == rhs);
 }
 
@@ -330,7 +332,9 @@ bool operator<(const SingleLinkedList<Type>& lhs, const SingleLinkedList<Type>& 
     size_t size_lhs = lhs.GetSize();
     size_t size_rhs = rhs.GetSize();
     if (size_lhs == size_rhs) {
+        
         return  (std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end()) > 0 ? true : false);
+
     }
     return true;
 }
